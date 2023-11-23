@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: postgres:latest
+    volumes:
+      - ./db-scripts/init-schema.sql:/docker-entrypoint-initdb.d/init-schema.sql
+    environment:
+      POSTGRES_PASSWORD: "pg123"
+    ports:
+      - "5432:5432"
+    

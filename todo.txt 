@@ -1,0 +1,47 @@
+workflow.yml |
+
+identifier String
+steps List 
+    - identifier int
+    - answer String
+    - messageToSend String
+    - wasSent bool
+    - allowedAnswers List
+        -   ans1 String
+        -   ans2 String
+        -   ans3 String 
+        ...
+
+
+Database:
+    table workflows
+            id uuid pk
+                session_id uuid // id generate in the client side that will be important for chatbot control which session has each workflow 
+            name varchar
+            version uuid  //Remove this
+            createdAt timestamp
+            updatedAt timestamp
+        
+
+    table - steps
+            id uuid
+            step_order int 
+            createdAt timestamp 
+            updatedAt timestamp
+
+    table - sentMessages
+            workflow_id ref workflows.id
+            step_id  ref steps.id
+
+    table - answers
+            workflow_id ref workflows.id
+            step_id ref steps.id
+            message varchar
+
+
+    table reviews
+        -   id uuid
+            workflow_id ref workflows.id
+            product_name String
+            review_text String
+            rating int
