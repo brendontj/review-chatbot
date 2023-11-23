@@ -2,39 +2,50 @@ package usecase
 
 import (
     "github.com/brendontj/review-chatbot/infrastructure/template"
-    "github.com/brendontj/review-chatbot/core/gateway
+    "github.com/brendontj/review-chatbot/core/gateway"
 )
 
 
 type StartWorkflowUseCase struct {
-    WorkflowTemplate template.WorkflowTemplate
+    WorkflowsTemplate gateway.Template
     Repo gateway.Repository
 }
 
-func NewStartWorkflowUseCase() *StartWorkflowUseCase {
-    return &StartWorkflowUseCase{}
+func NewStartWorkflowUseCase(workflowsTemplate gateway.Template, dbRepo gateway.Repository) *StartWorkflowUseCase {
+    return &StartWorkflowUseCase{
+		WorkflowsTemplate: workflowsTemplate,
+		Repo: dbRepo,
+	}
 }
 
-func (u *StartWorkflowUseCase) Execute(wfIndentifier string) {
-    workflow := u.WorkflowTemplate.GetWorkflow(wfIndentifier)
+func (u *StartWorkflowUseCase) Execute(msg string) {
+    workflow := u.WorkflowsTemplate.FindByType(msg)
     if workflow.Type == "" {
-        return
+		w, err := u.Repo.GetLastWorkflowNonFinalizedWithSteps()
+		if err != nil {
+			return
+		}
+
+		if err := u.Repo.SaveStepAnswer(u, wtIdentifier); err != nil {
+			return
+		}
+		return u.executeWorkflow(workflow, w.LastStepIndex + 1)
     }
 
-    wf, err :=  u.Repo.GetLastWorkflowNonFinishedByType(workflow.Type)
-    if err != nil {
-        //Should start a new workflow 
-        u.Repo.SaveWorkflow(newWorkflow)
-    }
-    
-    //Start the next step of the workflow 
-
-    nextStep := u.WorkflowTemplate.GetStep(wf.Type, wf.CurrentStep+1)
-    if nextStep == "" {
-        //Workflow is finished 
-        return
-    }
-
-    u.Sender.Send(u.WorkflowTemplate.GetStep(nextStep)
-    return
+	return u.executeWorkflow(workflow, 0) 
 }
+
+func (u *StartWorkflowUseCase) executeWorkflow(workflow template.Workflow, stepIndex int) {
+	ok := workflow.Steps[stepIndex]
+	if !ok {
+		return u.generateReview(workflow)
+	}
+
+	return u.generateNextStep(workflow, stepIndex)
+}
+
+func (u *StartWorkflowUseCase) generateReview(workflow template.Workflow) {
+ 	u.Repo.GetAnswers()
+	return u.Repo.SaveReview(workflow)
+}
+

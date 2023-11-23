@@ -1,11 +1,10 @@
-package entity 
+package entity
 
 import (
-    "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 type Workflow struct {
-    ID uuid.UUID
-    Type string
+	ID   uuid.UUID
+	Type string
 }
-

@@ -11,13 +11,10 @@ type MelodyService struct {
 
 func New() *MelodyService {
     m := melody.New()
-
-    m.HandleMessage(func(s *melody.Session, msg []byte) {
-        fmt.Println("Received message from client: ", string(msg))
-        m.Broadcast(msg)
-        m.Broadcast([]byte("Hello from server"))
-    }) 
-
     return &MelodyService{m}
+}
+
+func (m *MelodyService) SetHandleMessage(handler func(*melody.Session, []byte)) {
+	m.HandleMessage(handler)
 }
 

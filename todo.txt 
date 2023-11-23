@@ -15,26 +15,22 @@ steps List
 
 Database:
     table workflows
-            id uuid pk
-                session_id uuid // id generate in the client side that will be important for chatbot control which session has each workflow 
-            name varchar
-            version uuid  //Remove this
+            id uuid pk 
+            type varchar
             createdAt timestamp
-            updatedAt timestamp
         
 
     table - steps
             id uuid
-            step_order int 
+            workflow_id  ref workflows.id
+            step_order int
             createdAt timestamp 
-            updatedAt timestamp
 
-    table - sentMessages
-            workflow_id ref workflows.id
-            step_id  ref steps.id
+//    table - sentMessages
+//            workflow_id ref workflows.id
+//            step_id  ref steps.idV
 
     table - answers
-            workflow_id ref workflows.id
             step_id ref steps.id
             message varchar
 
