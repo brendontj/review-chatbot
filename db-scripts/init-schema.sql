@@ -21,9 +21,9 @@ CREATE TABLE answers (
 );
 
 CREATE TABLE reviews (
-   id UUID PRIMARY KEY,
-   workflow_id UUID REFERENCES workflows(id),
-   product_name VARCHAR,
-   review_text VARCHAR,
-   rating INT
-);
+ id UUID PRIMARY KEY,
+ workflow_id UUID REFERENCES workflows(id),
+ product_name VARCHAR,
+ review_text VARCHAR,
+ rating INT
+); 

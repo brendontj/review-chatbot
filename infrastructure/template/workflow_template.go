@@ -2,12 +2,21 @@ package template
 
 type WorkflowStep struct {
 	Order int
-	Text string
+	Text  string
 }
 
 type WorkflowTemplate struct {
-	Type  string         
-	Steps []WorkflowStep 
+	Type  string
+	Steps []WorkflowStep
+}
+
+func (wt WorkflowTemplate) ExistStepWithOrderEqual(orderIdentifier int) bool {
+	for _, v := range wt.Steps {
+		if v.Order == orderIdentifier {
+			return true
+		}
+	}
+	return false
 }
 
 type WorkflowsTemplate []WorkflowTemplate
@@ -29,23 +38,16 @@ func GenerateWorkflowsTemplate() WorkflowsTemplate {
 			Steps: []WorkflowStep{
 				{
 					Order: 0,
-					Text: "Hello, I'm a review chatbot. I will help you to get a review from your customer. What is your name?",
+
+					Text: "Hello, I'm a review chatbot. I will help you with the product review from your customer. What is the product name?",
 				},
 				{
 					Order: 1,
-					Text: "What is the product name?",
+					Text:  "In a scale of 1 to 5, how do you rate our product?",
 				},
 				{
 					Order: 2,
-					Text: "In a scale of 1 to 5, how do you rate our product?",
-				},
-				{
-					Order: 3,
-					Text: "Please write your review here",
-				},
-				{
-					Order: 4,
-					Text: "Thank you for your review. We really appreciate it.",
+					Text:  "Please write your review here",
 				},
 			},
 		},

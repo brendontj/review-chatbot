@@ -25,12 +25,16 @@ func (svr *Server) setInitialDepencies() {
 	database := database.New()
 	database.Connect()
 
-	workflowTemplate := template.GenerateWorkflowsTemplateate()
+	workflowTemplate := template.GenerateWorkflowsTemplate()
 	swuc := usecase.NewStartWorkflowUseCase(workflowTemplate, database)
 
 	svr.m.SetHandleMessage(func(s *mel.Session, msg []byte) {
 		svr.m.Broadcast(msg)
 		generatedMsg := swuc.Execute(string(msg))
+		if generatedMsg == "" {
+			return
+		}
+
 		svr.m.Broadcast([]byte(generatedMsg))
 	})
 }
