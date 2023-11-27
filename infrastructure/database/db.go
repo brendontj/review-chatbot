@@ -38,22 +38,28 @@ func (d *Database) GetLastWorkflowNonFinalizedWithSteps() (gateway.WorkflowWithS
 	queryLastWorkflow := `
      SELECT 
         workflows.id, 
-        workflows.type, 
+        workflows.type 
      FROM 
-        workflows 
+        workflows
+	 LEFT JOIN finalized_workflows
+	 	ON workflows.id = finalized_workflows.workflow_id
+	 WHERE finalized_workflows.workflow_id IS NULL
      ORDER BY 
         workflows.createdAt DESC 
      LIMIT 1
   `
 
-	row, err := d.conn.Query(context.Background(), queryLastWorkflow)
-	if err != nil {
-		return nil, err
-	}
-	defer row.Close()
+	row := d.conn.QueryRow(context.Background(), queryLastWorkflow)
 
 	var workflow WorkflowWithStepsModel
-	row.Scan(&workflow.ID, &workflow.TypeF)
+	err := row.Scan(&workflow.ID, &workflow.TypeF)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("no workflow found")
+		}
+
+		return WorkflowWithStepsModel{}, err
+	}
 
 	queryStepsFromWorkflow := `
 	 SELECT
@@ -100,16 +106,17 @@ func (d *Database) SaveWorkflow(workflowType string) (gateway.WorkflowWithStepsM
 	query := `
    INSERT INTO workflows (id, type, createdAt) 
    VALUES ($1, $2, $3)
-   RETURNING id, type, createdAt
  `
 	id := uuid.New()
 
-	row := d.conn.QueryRow(context.Background(), query, id, workflowType, time.Now())
-
-	var workflow WorkflowWithStepsModel
-	err := row.Scan(&workflow.ID, &workflow.TypeF, []StepModel{})
+	_, err := d.conn.Exec(context.Background(), query, id, workflowType, time.Now())
 	if err != nil {
 		return WorkflowWithStepsModel{}, err
+	}
+
+	workflow := WorkflowWithStepsModel{
+		ID:    id,
+		TypeF: workflowType,
 	}
 
 	return workflow, nil
@@ -124,6 +131,19 @@ func (d *Database) SaveStep(workflowID uuid.UUID, stepOrder int) error {
 	id := uuid.New()
 
 	_, err := d.conn.Exec(context.Background(), query, id, workflowID, stepOrder, time.Now())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Database) SaveFinalizedWorkflow(workflowID uuid.UUID) error {
+	query := `
+	  INSERT INTO finalized_workflows (workflow_id, createdAt)
+	  VALUES ($1, $2)
+	  `
+	_, err := d.conn.Exec(context.Background(), query, workflowID, time.Now())
 	if err != nil {
 		return err
 	}
@@ -154,6 +174,8 @@ func (d *Database) SaveReview(workflow gateway.WorkflowWithStepsModel, reviewTex
 				return err
 			}
 			rating = intAnswer
+		case 2:
+			// do nothing
 		default:
 			return fmt.Errorf("invalid step order")
 		}

@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/brendontj/review-chatbot/core/usecase"
 	"github.com/brendontj/review-chatbot/infrastructure/database"
@@ -30,7 +31,9 @@ func (svr *Server) setInitialDepencies() {
 
 	svr.m.SetHandleMessage(func(s *mel.Session, msg []byte) {
 		svr.m.Broadcast(msg)
-		generatedMsg := swuc.Execute(string(msg))
+		regex := regexp.MustCompile("> ").Split(string(msg), 2)
+		generatedMsg := swuc.Execute(regex[1])
+
 		if generatedMsg == "" {
 			return
 		}

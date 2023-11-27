@@ -8,6 +8,11 @@ CREATE TABLE workflows (
    createdAt TIMESTAMP
 );
 
+CREATE TABLE finalized_workflows (
+   workflow_id UUID REFERENCES workflows(id),
+   createdAt TIMESTAMP
+);
+
 CREATE TABLE steps (
    id UUID PRIMARY KEY,
    workflow_id UUID REFERENCES workflows(id),
